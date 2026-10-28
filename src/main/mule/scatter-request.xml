@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9758a71e-63f8-47a8-996e-0ffd4379738b" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="57d77e3a-a68e-4e26-927c-856f13b05bc4" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="ae4dc3b5-f823-4cd1-930c-784a26d980b6" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration2" doc:name="HTTP Request configuration" doc:id="23e6ad66-a802-4eae-8316-512c158188a4" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="scatter-requestFlow" doc:id="21fafd87-7983-4baf-bb97-552e974eb9f2" >
+		<http:listener doc:name="Listener" doc:id="aa4e47f6-43b3-49bc-bc74-17df2db44894" config-ref="HTTP_Listener_config" path="/scatter-request"/>
+		<logger level="INFO" doc:name="Logger" doc:id="db05e9aa-96a1-4ecc-97e2-971893331957" message="start"/>
+		<ee:transform doc:name="Transform Message" doc:id="143a60a7-cbdb-4906-9c33-56566698f9b5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="origin" ><![CDATA[attributes.queryParams.origin]]></ee:set-variable>
+				<ee:set-variable variableName="destination" ><![CDATA[attributes.queryParams.destination]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="bbd146e0-ed91-483b-a65c-e68c19c52ef3" >
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="887a2665-16e1-4156-bb7d-f523fde4dc8d" config-ref="HTTP_Request_configuration" path="/api/flights">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	origin : vars.origin
+}]]]></http:query-params>
+				</http:request>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="5830b6a3-0360-4661-ab20-9f335b24b5ae" config-ref="HTTP_Request_configuration1" path="/api/flights">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	destination : vars.destination
+}]]]></http:query-params>
+				</http:request>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="7b255008-c771-44e7-a407-fa79c8592c29" config-ref="HTTP_Request_configuration2" path="/api/flights">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"Key" : "Value"
+}]]]></http:query-params>
+				</http:request>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="afb7bbf3-ebe9-463b-b6c5-cfb725dd8fe3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
